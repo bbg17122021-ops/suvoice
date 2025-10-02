@@ -1,56 +1,413 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Giọng nói AI dễ thương</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #fce4ec, #f8bbd0);
-      color: #333;
-      text-align: center;
-      padding: 2rem;
-    }
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-    button {
-      background-color: #ff80ab;
-      color: white;
-      border: none;
-      padding: 1rem 2rem;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #ff4081;
-    }
-    .note {
-      margin-top: 2rem;
-      font-size: 0.9rem;
-      color: #555;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chuyển Văn bản thành Giọng nói</title>
+    <!-- Tải Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tải Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Style cho nút download */
+        .download-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #10b981; /* Màu xanh ngọc */
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .download-button:hover {
+            background-color: #059669;
+        }
+    </style>
 </head>
-<body>
-  <h1>🎀 Xin chào! Đây là giọng nói AI dễ thương 🎀</h1>
-  <button onclick="speak()">Phát giọng nói</button>
-  <p class="note">Bạn có thể chỉnh sửa đoạn thoại hoặc tích hợp API TTS sau.</p>
+<body class="min-h-screen flex items-center justify-center p-4">
 
-  <script>
-    function speak() {
-      const msg = new SpeechSynthesisUtterance();
-      msg.text = "Chào bạn nhé! Mình là giọng nói AI dễ thương, luôn sẵn sàng giúp bạn bất cứ lúc nào.";
-      msg.lang = "vi-VN";
-      msg.pitch = 1.5; // giọng cao hơn
-      msg.rate = 0.95; // nói chậm nhẹ
-      msg.voice = speechSynthesis.getVoices().find(v => v.lang === "vi-VN" && v.name.includes("Female"));
-      window.speechSynthesis.speak(msg);
-    }
-  </script>
+    <div id="app-container" class="w-full max-w-xl bg-white shadow-2xl rounded-xl p-6 md:p-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4 text-center">🎤 TTS Gemini Nâng Cao</h1>
+        <p class="text-center text-gray-500 mb-6">Chọn giọng nói và tốc độ, sau đó nhập văn bản. Bạn có thể tải audio về sau khi tạo.</p>
+
+        <!-- Khu vực tùy chọn -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <!-- Chọn Giọng nói -->
+            <div>
+                <label for="voiceSelector" class="block text-sm font-medium text-gray-700 mb-1">Giọng Nói:</label>
+                <select id="voiceSelector" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    <!-- Giọng Nữ -->
+                    <optgroup label="Giọng Nữ">
+                        <option value="Achernar">Nữ truyền cảm, dịu dàng (Achernar)</option>
+                        <option value="Sadachbia">Nữ vui vẻ, sống động (Sadachbia)</option>
+                        <option value="Erinome">Nữ trang trọng, rõ ràng (Erinome)</option>
+                        <option value="Leda">Nữ trẻ (Leda)</option>
+                        <option value="Umbriel">Nữ dễ tính (Umbriel)</option>
+                    </optgroup>
+                    <!-- Giọng Nam -->
+                    <optgroup label="Giọng Nam">
+                        <option value="Puck" selected>Nam trẻ (Puck)</option>
+                        <option value="Gacrux">Nam trầm ấm, trưởng thành (Gacrux)</option>
+                        <option value="Fenrir">Nam nhiệt huyết, hoạt bát (Fenrir)</option>
+                        <option value="Kore">Nam trưởng thành (Kore)</option>
+                    </optgroup>
+                </select>
+            </div>
+            
+            <!-- Điều chỉnh Tốc độ -->
+            <div>
+                <label for="speedSelector" class="block text-sm font-medium text-gray-700 mb-1">Tốc Độ Đọc:</label>
+                <select id="speedSelector" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="normal" selected>Bình thường</option>
+                    <option value="slow">Chậm</option>
+                    <option value="fast">Nhanh</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Khu vực nhập liệu -->
+        <textarea
+            id="textInput"
+            rows="5"
+            class="w-full p-3 border-2 border-indigo-200 rounded-lg focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 ease-in-out resize-none mb-4"
+            placeholder="Ví dụ: Công nghệ trí tuệ nhân tạo đang thay đổi cách chúng ta làm việc và tương tác. Hãy nghe thử giọng nói mới này nhé.">Chào mừng bạn đến với ứng dụng Chuyển văn bản thành giọng nói phiên bản đầy đủ. Bạn có thể chọn bất kỳ giọng nào trong chín tùy chọn có sẵn, từ trầm ấm đến vui vẻ, và điều chỉnh tốc độ đọc theo ý muốn của mình.</textarea>
+
+        <!-- Nút tạo giọng nói -->
+        <button
+            id="generateButton"
+            class="w-full flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed">
+            <span id="buttonText">Tạo Giọng Nói</span>
+            <svg id="loadingSpinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </button>
+
+        <!-- Khu vực hiển thị kết quả -->
+        <div id="resultArea" class="mt-6 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hidden">
+            <h2 class="text-lg font-semibold text-gray-700 mb-3">Kết Quả Audio:</h2>
+            <audio id="audioPlayer" controls class="w-full mb-3"></audio>
+            <!-- Nút Tải Xuống mới -->
+            <button id="downloadButton" class="download-button w-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v7a1 1 0 11-2 0V4a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                Tải Xuống Audio (.wav)
+            </button>
+        </div>
+
+        <!-- Khu vực thông báo lỗi/thông tin -->
+        <div id="messageBox" class="mt-4 p-3 rounded-lg text-sm text-center hidden"></div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Biến toàn cục từ môi trường Canvas (BẮT BUỘC SỬ DỤNG)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app;
+        let auth;
+        let db;
+        let globalWavBlob = null; // Biến toàn cục để lưu trữ Blob cho chức năng tải xuống
+
+        // Khởi tạo Firebase (chủ yếu để đáp ứng yêu cầu môi trường, không dùng cho TTS)
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            (async () => {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            })();
+
+        } catch (error) {
+            console.error("Lỗi khi khởi tạo Firebase:", error);
+        }
+
+        // ----------------------
+        // CÁC HÀM XỬ LÝ CHUYỂN ĐỔI AUDIO (PCM sang WAV)
+        // ----------------------
+
+        /**
+         * Chuyển đổi Base64 thành ArrayBuffer
+         * @param {string} base64 - Dữ liệu audio base64
+         * @returns {ArrayBuffer}
+         */
+        const base64ToArrayBuffer = (base64) => {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        };
+
+        /**
+         * Chuyển đổi dữ liệu PCM 16-bit thành Blob file WAV
+         * @param {Int16Array} pcm16 - Dữ liệu audio PCM (16-bit signed)
+         * @param {number} sampleRate - Tần số lấy mẫu (ví dụ: 24000)
+         * @returns {Blob} File Blob WAV
+         */
+        const pcmToWav = (pcm16, sampleRate) => {
+            const numChannels = 1;
+            const bitDepth = 16;
+            const numSamples = pcm16.length;
+
+            const buffer = new ArrayBuffer(44 + numSamples * 2);
+            const view = new DataView(buffer);
+
+            // Ghi tiêu đề RIFF (12 bytes)
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + numSamples * 2, true); // Tổng kích thước tệp
+            writeString(view, 8, 'WAVE');
+
+            // Ghi khối 'fmt ' (24 bytes)
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true); // Kích thước của khối fmt (16)
+            view.setUint16(20, 1, true); // Định dạng audio (1 = PCM)
+            view.setUint16(22, numChannels, true); // Số lượng kênh (1)
+            view.setUint32(24, sampleRate, true); // Tần số lấy mẫu
+            view.setUint32(28, sampleRate * numChannels * (bitDepth / 8), true); // Byte rate
+            view.setUint16(32, numChannels * (bitDepth / 8), true); // Block align
+            view.setUint16(34, bitDepth, true); // Độ sâu bit (16)
+
+            // Ghi khối 'data' (8 + data size)
+            writeString(view, 36, 'data');
+            view.setUint32(40, numSamples * 2, true); // Kích thước dữ liệu (samples * 2 bytes/sample)
+
+            // Ghi dữ liệu PCM
+            let offset = 44;
+            for (let i = 0; i < numSamples; i++) {
+                view.setInt16(offset, pcm16[i], true); // Ghi dữ liệu 16-bit (little endian)
+                offset += 2;
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+        };
+
+        const writeString = (view, offset, string) => {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        };
+
+        // ----------------------
+        // HÀM XỬ LÝ GIAO DIỆN, API VÀ DOWNLOAD
+        // ----------------------
+
+        const textInput = document.getElementById('textInput');
+        const generateButton = document.getElementById('generateButton');
+        const downloadButton = document.getElementById('downloadButton');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const buttonText = document.getElementById('buttonText');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const resultArea = document.getElementById('resultArea');
+        const messageBox = document.getElementById('messageBox');
+        const voiceSelector = document.getElementById('voiceSelector');
+        const speedSelector = document.getElementById('speedSelector');
+
+
+        /** Hiển thị thông báo trên giao diện */
+        const showMessage = (text, classes) => {
+            messageBox.innerHTML = text; 
+            messageBox.className = `mt-4 p-3 rounded-lg text-sm text-center ${classes}`;
+            messageBox.style.display = 'block';
+        };
+
+        /** Ẩn thông báo */
+        const hideMessage = () => {
+            messageBox.style.display = 'none';
+        };
+
+        /** Chuyển đổi trạng thái loading */
+        const setLoading = (isLoading) => {
+            generateButton.disabled = isLoading;
+            textInput.disabled = isLoading;
+            voiceSelector.disabled = isLoading;
+            speedSelector.disabled = isLoading;
+
+            if (isLoading) {
+                loadingSpinner.classList.remove('hidden');
+                buttonText.textContent = 'Đang tạo...';
+                hideMessage();
+            } else {
+                loadingSpinner.classList.add('hidden');
+                buttonText.textContent = 'Tạo Giọng Nói';
+            }
+        };
+
+        /** Xử lý chức năng Tải Xuống */
+        const handleDownload = () => {
+            if (globalWavBlob) {
+                const url = URL.createObjectURL(globalWavBlob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                // Tạo tên file dựa trên thời gian hiện tại
+                const now = new Date();
+                const filename = `audio_tts_${now.toISOString().replace(/[:.]/g, '-')}.wav`;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                showMessage(`Đã tải xuống thành công file <b>${filename}</b>.`, 'bg-indigo-100 text-indigo-800');
+            } else {
+                showMessage("Không có file audio để tải xuống. Vui lòng tạo giọng nói trước.", 'bg-yellow-100 text-yellow-800');
+            }
+        };
+
+        /** Xử lý API TTS với logic backoff */
+        const generateTTS = async (text) => {
+            if (!text.trim()) {
+                showMessage("Vui lòng nhập văn bản cần chuyển đổi.", 'bg-yellow-100 text-yellow-800');
+                return;
+            }
+
+            const selectedVoice = voiceSelector.value;
+            const selectedSpeed = speedSelector.value;
+            let finalPrompt = text;
+
+            // Áp dụng điều chỉnh tốc độ
+            if (selectedSpeed === 'slow') {
+                finalPrompt = `Say very slowly: ${text}`;
+            } else if (selectedSpeed === 'fast') {
+                finalPrompt = `Say very quickly: ${text}`;
+            }
+
+            setLoading(true);
+            hideMessage();
+            audioPlayer.src = '';
+            resultArea.classList.add('hidden');
+            globalWavBlob = null; // Reset Blob cũ
+
+            const apiKey = ""; 
+
+            // Cấu hình payload
+            const payload = {
+                contents: [{
+                    parts: [{ text: finalPrompt }] 
+                }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: selectedVoice } 
+                        }
+                    }
+                },
+            };
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+
+            const MAX_RETRIES = 3;
+            let attempt = 0;
+            let response = null;
+
+            while (attempt < MAX_RETRIES) {
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        break; 
+                    } else if (response.status === 429) {
+                        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 500;
+                        console.warn(`Throttling (429). Thử lại lần ${attempt + 1} sau ${delay}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    } else {
+                        throw new Error(`Lỗi HTTP: ${response.status} - ${await response.text()}`);
+                    }
+                } catch (error) {
+                    console.error(`Lỗi trong lần thử ${attempt + 1}: `, error);
+                }
+                attempt++;
+            }
+
+            setLoading(false);
+
+            if (!response || !response.ok) {
+                showMessage("LỖI: Không thể tạo giọng nói. Vui lòng thử lại sau.", 'bg-red-100 text-red-800');
+                return;
+            }
+
+            try {
+                const result = await response.json();
+                const candidate = result?.candidates?.[0];
+                const part = candidate?.content?.parts?.find(p => p.inlineData);
+
+                const audioData = part?.inlineData?.data;
+                const mimeType = part?.inlineData?.mimeType;
+
+                if (audioData && mimeType && mimeType.startsWith("audio/L16")) {
+                    const rateMatch = mimeType.match(/rate=(\d+)/);
+                    const sampleRate = rateMatch ? parseInt(rateMatch[1], 10) : 24000;
+
+                    const pcmDataBuffer = base64ToArrayBuffer(audioData);
+                    const pcm16 = new Int16Array(pcmDataBuffer);
+
+                    // Chuyển PCM sang Blob WAV và lưu vào biến toàn cục
+                    const wavBlob = pcmToWav(pcm16, sampleRate);
+                    globalWavBlob = wavBlob; 
+                    
+                    const audioUrl = URL.createObjectURL(wavBlob);
+                    
+                    audioPlayer.src = audioUrl;
+                    resultArea.classList.remove('hidden');
+                    
+                    // Xử lý tự động phát (Autoplay)
+                    try {
+                        const playPromise = audioPlayer.play();
+                        if (playPromise !== undefined) {
+                            playPromise.then(() => {
+                                showMessage("Đã tạo và đang phát giọng nói!", 'bg-green-100 text-green-800');
+                            }).catch(error => {
+                                showMessage("Đã tạo giọng nói thành công. Vui lòng nhấn nút <b>PLAY (▶)</b> để nghe hoặc <b>Tải Xuống</b>.", 'bg-yellow-100 text-yellow-800');
+                            });
+                        }
+                    } catch(e) {
+                         showMessage("Đã tạo giọng nói thành công. Vui lòng nhấn nút <b>PLAY (▶)</b> để nghe hoặc <b>Tải Xuống</b>.", 'bg-yellow-100 text-yellow-800');
+                    }
+
+
+                } else {
+                    showMessage("LỖI DỮ LIỆU: Dữ liệu audio không hợp lệ từ API.", 'bg-red-100 text-red-800');
+                }
+            } catch (e) {
+                console.error("Lỗi xử lý phản hồi API:", e);
+                showMessage("LỖI: Xảy ra sự cố khi xử lý dữ liệu âm thanh.", 'bg-red-100 text-red-800');
+            }
+        };
+
+        // Gắn sự kiện vào nút
+        generateButton.addEventListener('click', () => {
+            generateTTS(textInput.value);
+        });
+        
+        // Gắn sự kiện cho nút Tải Xuống
+        downloadButton.addEventListener('click', handleDownload);
+
+    </script>
 </body>
 </html>
