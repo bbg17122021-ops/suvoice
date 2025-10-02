@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>SuVoice TTS - FPT.AI</title>
+  <title>SuVoice TTS - LarVoi</title>
   <style>
     body {
       font-family: sans-serif;
@@ -32,16 +32,14 @@
   </style>
 </head>
 <body>
-  <h2>🔊 SuVoice - FPT.AI TTS</h2>
+  <h2>🔊 SuVoice - LarVoi TTS</h2>
 
   <textarea id="text" placeholder="Nhập văn bản tiếng Việt..."></textarea>
 
   <label for="voice">Chọn giọng đọc:</label>
   <select id="voice">
-    <option value="banmai">Nữ - Ban Mai</option>
-    <option value="leminh">Nam - Lê Minh</option>
-    <option value="myan">Nữ - Mỹ An</option>
-    <option value="minhquang">Nam - Minh Quang</option>
+    <option value="male">Nam</option>
+    <option value="female">Nữ</option>
   </select>
 
   <label for="speed">Tốc độ đọc (0.5 → 1.5): <span id="speedValue">1</span></label>
@@ -52,7 +50,7 @@
   <button id="downloadBtn">⬇️ Tải file MP3</button>
 
   <script>
-    const API_KEY = "GAacsKsBDMjUiqu04JKFi05wCT1qBgKZ";
+    const API_KEY = "1016fd9a1bd783504acea4fb54d7e585"; // ← Thay bằng key LarVoi của bạn
     const textInput = document.getElementById("text");
     const voiceSelect = document.getElementById("voice");
     const speedInput = document.getElementById("speed");
@@ -71,29 +69,29 @@
       const voice = voiceSelect.value;
       const speed = speedInput.value;
 
-      const response = await fetch("https://api.fpt.ai/hmi/tts/v5", {
+      const response = await fetch("https://api.lar.ai/voice/tts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "api-key": API_KEY
+          "Authorization": `Bearer ${API_KEY}`
         },
         body: JSON.stringify({
           text,
-          voice,
-          speed: parseFloat(speed)
+          voice,       // "male" hoặc "female"
+          speed        // tốc độ đọc: 0.5 → 1.5
         })
       });
 
       const result = await response.json();
-      if (result && result.async) {
-        audioPlayer.src = result.async;
+      if (result && result.audio_url) {
+        audioPlayer.src = result.audio_url;
         audioPlayer.play();
 
         // Hiển thị nút tải file
         downloadBtn.style.display = "inline-block";
         downloadBtn.onclick = () => {
           const link = document.createElement("a");
-          link.href = result.async;
+          link.href = result.audio_url;
           link.download = "suvoice.mp3";
           document.body.appendChild(link);
           link.click();
