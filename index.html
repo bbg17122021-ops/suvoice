@@ -50,7 +50,7 @@
   <button id="downloadBtn">⬇️ Tải file MP3</button>
 
   <script>
-    const API_KEY = "1016fd9a1bd783504acea4fb54d7e585"; // ← Thay bằng key LarVoi của bạn
+    const API_KEY = "1016fd9a1bd783504acea4fb54d7e585";
     const textInput = document.getElementById("text");
     const voiceSelect = document.getElementById("voice");
     const speedInput = document.getElementById("speed");
@@ -67,38 +67,38 @@
       if (!text) return alert("Vui lòng nhập văn bản.");
 
       const voice = voiceSelect.value;
-      const speed = speedInput.value;
+      const speed = parseFloat(speedInput.value);
 
-      const response = await fetch("https://api.lar.ai/voice/tts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${API_KEY}`
-        },
-        body: JSON.stringify({
-          text,
-          voice,       // "male" hoặc "female"
-          speed        // tốc độ đọc: 0.5 → 1.5
-        })
-      });
+      try {
+        const response = await fetch("https://api.lar.ai/voice/tts", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${API_KEY}`
+          },
+          body: JSON.stringify({ text, voice, speed })
+        });
 
-      const result = await response.json();
-      if (result && result.audio_url) {
-        audioPlayer.src = result.audio_url;
-        audioPlayer.play();
+        const result = await response.json();
+        if (result && result.audio_url) {
+          audioPlayer.src = result.audio_url;
+          audioPlayer.play();
 
-        // Hiển thị nút tải file
-        downloadBtn.style.display = "inline-block";
-        downloadBtn.onclick = () => {
-          const link = document.createElement("a");
-          link.href = result.audio_url;
-          link.download = "suvoice.mp3";
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        };
-      } else {
-        alert("Không thể tạo giọng nói. Kiểm tra lại API key hoặc văn bản.");
+          downloadBtn.style.display = "inline-block";
+          downloadBtn.onclick = () => {
+            const link = document.createElement("a");
+            link.href = result.audio_url;
+            link.download = "suvoice.mp3";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          };
+        } else {
+          alert("Không thể tạo giọng nói. Kiểm tra lại văn bản hoặc key.");
+        }
+      } catch (error) {
+        console.error("Lỗi API:", error);
+        alert("Đã xảy ra lỗi khi gọi API LarVoi.");
       }
     }
   </script>
